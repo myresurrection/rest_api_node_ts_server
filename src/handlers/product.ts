@@ -1,0 +1,103 @@
+import { Request, Response } from 'express'
+import Product from '../models/Product.model';
+// Se tipan las respuestas y peticiones
+
+export const getProducts = async (req: Request, res: Response) => {
+    try {
+        const products = await Product.findAll({
+            order: [
+                ['price', 'DESC']
+            ],
+            attributes: { exclude: ['createdAt', 'updatedAt', 'availability'] }
+        });
+        res.json({ data: products })
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+
+
+export const getProductById = async (req: Request, res : Response)  => {
+    try {
+        const { id } = req.params
+        const product = await Product.findByPk(id)
+
+        if(!product) {
+                res.status(404).json({
+                error: 'Producto no encontrado'
+            })
+        } else {
+            res.json({data: product})
+        }
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const createProduct = async (req: Request, res: Response) : Promise<void> => {
+
+    try {
+        const product = await Product.create(req.body);
+        res.status(201).json({ data: product })
+    } catch (error) {
+        console.log(error)
+    }
+
+}
+
+export const updateProduct = async (req : Request, res : Response) => {
+    // Comprobar que el producto exista
+    const { id } = req.params
+        const product = await Product.findByPk(id)
+
+        if(!product) {
+                res.status(404).json({
+                error: 'Producto no encontrado'
+            })
+        }
+
+    
+        await product.update(req.body)
+        await product.save()
+    
+        res.json({data: product})
+
+    
+}
+
+
+
+export const updateAvailability = async (req: Request, res: Response) => {
+    // Comprobar que el producto exista
+    const { id } = req.params
+        const product = await Product.findByPk(id)
+
+        if(!product) {
+                res.status(404).json({
+                error: 'Producto no encontrado'
+            })
+        }
+
+        // Actualizar
+        // El contrario a lo que ya esté seteado
+        product.availability = !product.dataValues.availability
+        await product.save()
+    
+        res.json({data: product})
+}
+
+export const deleteProduct = async (req: Request, res: Response) => {
+    // Comprobar que el producto exista
+    const { id } = req.params
+        const product = await Product.findByPk(id)
+
+        if(!product) {
+                res.status(404).json({
+                error: 'Producto no encontrado'
+            })
+        }
+
+      await product.destroy();
+      res.json({data: 'Producto Eliminado'});
+}
